@@ -16,10 +16,11 @@ export class UsersService { // creates a service called 'UsersService' that cont
 
 
   // method for creating a new user
+  // async create(dto:createUserDto) :Promise<Partial<Iser>> --> This function will return an object based on User, but some properties may be missing
   async create(dto: CreateUserDto): Promise<User> {  // this method receives user data, creates a user, hashes the password, saves it, returns the user
                                                      // it contains asynchronous operations
                                                      // Promise<user> means that this function will eventually return a User 
-    const {username, password, name} = dto; // object destructuring to extract the username, password, and name from the dto object
+                                                     const {username, password, name} = dto; // object destructuring to extract the username, password, and name from the dto object
 
     const salt = await bcrypt.genSalt();    // generates a salt for hashing the password. A salt is a random data added before hashing to make the hash unique even for identical passwords. This helps protect against rainbow table attacks(weakness - identical passwords producing identical hashes)
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -40,10 +41,14 @@ export class UsersService { // creates a service called 'UsersService' that cont
      *    ('Vic', 'hashedPassword', 'Victory');
      */
     const newUser = await this.userRepository.save(user); // save the user to the database and return the saved user object, which now includes the generated id
-
-    delete newUser.password; // remove password from the returned user object (do not send the password back to the client - ofc, for security reasons)
-    return newUser;
-
+  
+    const cUser: Partial<User> = {...newUser}; // create a copy of the newUser object to avoid mutating the original object
+    // the spread operator(...) copies all properties from 'newUser' into a new object 'cUser', which is of type Partial<User> (changing cUser does not change newUser)
+    delete cUser.password; // remove password from the returned user object (do not send the password back to the client - ofc, for security reasons)
+    // delete newUser.password; // remove password from the returned user object (do not send the password back to the client - ofc, for security reasons)
+    //return newUser;
+    return cUser as User; // 'as user' is a type assertion.. telling ts "trust me - treat this object as a user"
+    // changed your code from trying to delete a property directly from a User entity to deleting it from a temporary copy whose type is Partial<User>.
   }
 }
 

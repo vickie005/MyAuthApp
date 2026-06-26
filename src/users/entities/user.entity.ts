@@ -19,3 +19,4 @@ export class User {
   @Column({default: 'inactive'})
   accountStatus!: 'active' | 'inactive';
 }
+// the '!' tells ts that this property will definately exist
