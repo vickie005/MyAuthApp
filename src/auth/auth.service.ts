@@ -27,15 +27,17 @@ export class AuthService {
       return null;
     }
 
-    delete user.password;
+      // delete user.password; // ts throws an error "The operand of a 'delete' operator must be optional." coz the password property is not optional in the User entity. So, I will use destructuring to remove the password property from the user object before returning it.
+      // return user;
+    const {password: _, ...result} = user; //takes the password property from the user and renames it into the local variable '_'. Since _ is never used, the password is effectively discarded. Collects all the remaining properties into a new object called result
 
-    return user;
+    return result;
   }
    async login(user: any) {
-    const payload = (username: user.username, sub: user.id);
-    return (
+    const payload = { username: user.username, sub: user.id };
+    return {
       access_token: this.jwtService.sign(payload),
-    );
+    };
    }
 
 }
