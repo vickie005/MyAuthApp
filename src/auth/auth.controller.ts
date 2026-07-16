@@ -1,34 +1,31 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
 
+import { Body, Controller, Post, UseGuards, Request } from '@nestjs/common';
+import { AuthService} from './auth.service';
+import {Public} from './decorators/public.decorator';
+import {LocalAuthGuard} from './guards/local-auth.guard';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { UsersService } from 'src/users/users.service';
+// import { Request as ExpressRequest } from 'express';
 @Controller('auth')
-export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+export class AuthController{
+  constructor(
+    private authService: AuthService,
+    private usersService: UsersService,
+  ){}
 
-  @Post()
-  create(@Body() createAuthDto: CreateAuthDto) {
-    return this.authService.create(createAuthDto);
+  //login endpoint that uses the LocalAuthGuard to authenticate the user using their username and password. If authentication is successful, it returns a JWT token.
+  @Public()
+  @UseGuards(LocalAuthGuard)
+  @Post('login')
+  async login(@Request() req: Express.Request){
+    return this.authService.login(req.user);
   }
 
-  @Get()
-  findAll() {
-    return this.authService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-    return this.authService.update(+id, updateAuthDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authService.remove(+id);
+  //register endpoint that allows new users to register by providing their details in the request body. It uses the UsersService to create a new user and returns the created user object.
+  @Public()
+  @Post('register')
+  async register(@Body() body: CreateUserDto){
+    const user = await this.usersService.create(body);
+    return user;
   }
 }
