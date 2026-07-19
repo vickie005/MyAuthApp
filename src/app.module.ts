@@ -6,6 +6,8 @@ import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './users/entities/user.entity';
 import { ConfigModule } from '@nestjs/config';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -21,6 +23,11 @@ import { ConfigModule } from '@nestjs/config';
   AuthModule
 ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    }, // with this, all the routes in the app will require valid jwt except the route marked as public using the '@Public' decorator
+  ],
 })
 export class AppModule {}
